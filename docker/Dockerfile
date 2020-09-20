@@ -5,14 +5,21 @@ RUN dnf install -y \
 	"https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
 	"https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
+# Add repo for vscode
+RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
+	sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+
 # Update packages
 RUN dnf update -y --refresh
 
 # Install some packages (Please keep this list sorted alphabetically)
 RUN dnf install -y \
-  bind-utils \
+	bind-utils \
 	binutils \
+	bzip2 \
+	cmake \
 	cmus \
+	code \
 	curl \
 	evince \
 	expect \
@@ -20,28 +27,38 @@ RUN dnf install -y \
 	fuse \
 	fuse-libs \
 	fuse-sshfs \
-  gedit \
+	gedit \
 	golang \
 	htop \
 	iputils \
+	liberation-fonts \
+	make \
 	mpv \
 	nautilus \
+	neovim \
 	openfortivpn \
 	openssh \
 	openssh-clients \
+	openssl-devel \
 	openvpn \
 	passwd \
 	procps-ng \
 	psmisc \
+	readline-devel \
+	ruby \
+	ruby-doc \
 	socat \
 	sudo \
 	telnet \
 	the_silver_searcher \
-  tmux \
+	tmux \
+	tree \
 	vim \
 	wget \
 	x2goclient \
-	xterm-resize
+	xterm-resize \
+	zlib-devel && \
+dnf -y groups install 'C Development Tools and Libraries'
 
 # Pulse audio config to be able to use host pulseaudio
 # Will need --volume /run/user/<uid>/pulse:/run/user/<uid>/pulse
@@ -65,6 +82,9 @@ RUN groupadd -g "${CONT_GID}" "${CONT_GROUP}" && \
 # Install extra RPMS
 COPY extra_rpms /tmp/extra_rpms
 RUN if [[ "$(find /tmp/extra_rpms/ -type f -name '*.rpm' -print | wc -l)" -gt 0 ]]; then dnf install -y /tmp/extra_rpms/*.rpm; fi
+
+# Allow others in FUSE mounts
+RUN sed -ri 's,^[[:space:]]*#*[[:space:]]*(user_allow_other[[:space:]]*)$,\1,g' /etc/fuse.conf
 
 # Allow running openforticlient without passwd and other commands with (Last rule takes preference)
 RUN echo "${CONT_USERNAME}"'	ALL=(ALL)	ALL' >> /etc/sudoers
