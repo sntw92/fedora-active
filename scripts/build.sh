@@ -1,7 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR=$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")
 
-DOCKER_EXE="${DOCKER_EXE:-sudo docker}"
+DOCKER_EXE="${DOCKER_EXE:-podman}"
 USE_CACHE="${USE_CACHE:-0}"
 
 CONT_UID=$(id -u)
@@ -9,7 +9,8 @@ CONT_GID=$(id -g)
 CONT_USERNAME=$(id -un)
 CONT_GROUP=$(id -gn)
 CONT_PASSWORD=${CONT_PASSWORD:-password}
-IMAGE_REPO=${IMAGE_REPO:-}
+IMAGE_REGISTRY=${IMAGE_REPO:-docker.io}
+IMAGE_REPO=${IMAGE_REPO:-sandiptiwari87}
 IMAGE_NAME=${IMAGE_NAME:-fedora-active}
 IMAGE_TAG=${IMAGE_TAG:-test}
 
