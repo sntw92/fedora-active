@@ -1,3 +1,4 @@
+# vim: set noexpandtab shiftwidth=2 tabstop=2:
 FROM fedora:latest
 
 # Install RPM fusion
@@ -39,6 +40,7 @@ RUN dnf install -y \
 	openfortivpn \
 	openssh \
 	openssh-clients \
+	openssl \
 	openssl-devel \
 	openvpn \
 	passwd \
@@ -85,11 +87,17 @@ RUN if [[ "$(find /tmp/extra_rpms/ -type f -name '*.rpm' -print | wc -l)" -gt 0 
 
 # Allow others in FUSE mounts
 RUN sed -ri 's,^[[:space:]]*#*[[:space:]]*(user_allow_other[[:space:]]*)$,\1,g' /etc/fuse.conf
+# Fix DNS resolution
+RUN sed -ri 's,^hosts:.*,hosts: files resolve [NOTFOUND=continue] myhostname dns,g' /etc/nsswitch.conf
 
 # Allow running openforticlient without passwd and other commands with (Last rule takes preference)
 RUN echo "${CONT_USERNAME}"'	ALL=(ALL)	ALL' >> /etc/sudoers
 RUN echo "${CONT_USERNAME}"'	ALL=(ALL)	NOPASSWD: /usr/bin/openfortivpn *' >> /etc/sudoers
 RUN echo "${CONT_USERNAME}"'	ALL=(ALL)	NOPASSWD: /usr/bin/kill *' >> /etc/sudoers
+
+# Make extra dirs
+ARG EXTRA_DIRS
+RUN if [[ -n "${EXTRA_DIRS:-}" ]]; then (IFS=: ; for p in ${EXTRA_DIRS}; do mkdir -p "$p" && chmod 1777 "$p"; done; ); fi
 
 # Switch users
 USER "${CONT_USERNAME}"
